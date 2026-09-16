@@ -1092,3 +1092,119 @@ model_complete %>%
     axis.ticks.x = element_blank(),
     legend.position = "none"
   )
+
+model_performance <- data.frame(
+  Model = c(
+    "Multiple Linear Regression",
+    "Ridge",
+    "LASSO",
+    "Elastic Net"
+  ),
+  RMSE = c(12.76, 12.83, 12.76, 12.76),
+  MAE  = c(10.36, 10.49, 10.36, 10.36),
+  R2   = c(0.462, 0.457, 0.463, 0.463)
+)
+
+performance_long <- model_performance %>%
+  select(Model, RMSE, MAE) %>%
+  pivot_longer(
+    cols = c(RMSE, MAE),
+    names_to = "Metric",
+    values_to = "Value"
+  )
+
+p_error <- ggplot(
+  performance_long,
+  aes(x = Model, y = Value, fill = Metric)
+) +
+  geom_col(
+    position = position_dodge(width = 0.75),
+    width = 0.65
+  ) +
+  labs(
+    title = "Comparison of Prediction Errors Across Models",
+    x = "Regression Model",
+    y = "Error (years)",
+    fill = "Metric"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(
+      angle = 20,
+      hjust = 1
+    ),
+    plot.title = element_text(
+      hjust = 0.5,
+      face = "bold"
+    )
+  )
+
+print(p_error)
+
+ggsave(
+  "RESULTS/model_comparison_RMSE_MAE.png",
+  plot = p_error,
+  width = 10,
+  height = 6,
+  dpi = 300
+)
+
+p_r2 <- ggplot(
+  model_performance,
+  aes(x = Model, y = R2)
+) +
+  geom_col(
+    width = 0.65
+  ) +
+  geom_text(
+    aes(label = sprintf("%.3f", R2)),
+    vjust = -0.4,
+    size = 4
+  ) +
+  labs(
+    title = "Comparison of R-squared Across Models",
+    x = "Regression Model",
+    y = expression(R^2)
+  ) +
+  ylim(0, 0.5) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(
+      angle = 20,
+      hjust = 1
+    ),
+    plot.title = element_text(
+      hjust = 0.5,
+      face = "bold"
+    )
+  )
+
+print(p_r2)
+
+ggsave(
+  "RESULTS/model_comparison_R2.png",
+  plot = p_r2,
+  width = 10,
+  height = 6,
+  dpi = 300
+)
+
+analysis_data %>%
+  mutate(
+    Age_Group = cut(
+      Age,
+      breaks = c(20, 30, 40, 50, 60, 70, 81),
+      labels = c("20–29", "30–39", "40–49", "50–59", "60–69", "70–80"),
+      right = FALSE
+    )
+  ) %>%
+  ggplot(aes(x = Age_Group, y = BMI)) +
+  geom_violin(trim = FALSE) +
+  geom_boxplot(width = 0.12, outlier.shape = NA) +
+  geom_jitter(width = 0.08, alpha = 0.15, size = 0.8) +
+  labs(
+    title = "BMI Distribution Across Age Groups",
+    x = "Age Group (years)",
+    y = "BMI (kg/m²)"
+  ) +
+  theme_minimal()
